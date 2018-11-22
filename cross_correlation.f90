@@ -433,9 +433,8 @@ PROGRAM Two_Filter_Cross_Correlation
           cassig_b = -i * SQRT(0.5 * gamma * kappa_b) * SQRT(1.0 * nb) * sigmam
           ! Matrix multiplication
           DO m=1,3
-            k1(nplace + m) = -i * dt * H_full(m,1) * psi_clone(nplace + 1) &
-                            &-i * dt * H_full(m,2) * psi_clone(nplace + 2) &
-                            &-i * dt * H_full(m,3) * psi_clone(nplace + 3)
+            k1(nplace + m) = -i * dt * dot_product(H_full(m,1:3), &
+                           &  psi_clone(nplace + 1:nplace + 3))
             ! Only calculate the next part for photon number na > 0 as the
             ! a^{\dagger} operator couples the |N-1> state to the |N> state.
             temp1 = 0
@@ -444,17 +443,15 @@ PROGRAM Two_Filter_Cross_Correlation
               ! cavity a
               ! photon number index for (na - 1)
               nplace_pm1 = (3 * (N + 1) * (na - 1)) + (3 * nb)
-              temp1 = -i * dt * cassig_a(m,1) * psi_clone(nplace_pm1 + 1) &
-                    & -i * dt * cassig_a(m,2) * psi_clone(nplace_pm1 + 2) &
-                    & -i * dt * cassig_a(m,3) * psi_clone(nplace_pm1 + 3)
+              temp1 = -i * dt * dot_product(cassig_a(m,1:3), &
+                    &  psi_clone(nplace_pm1 + 1:nplace_pm1 + 3))
             END IF
             IF (nb /= 0) THEN
                ! cavity b
                ! photon number index for (nb - 1)
                nplace_pm1 = (3 * (N + 1) * na) + (3 * (nb - 1))
-               temp2 = -i * dt * cassig_b(m,1) * psi_clone(nplace_pm1 + 1) &
-                     & -i * dt * cassig_b(m,2) * psi_clone(nplace_pm1 + 2) &
-                     & -i * dt * cassig_b(m,3) * psi_clone(nplace_pm1 + 3)
+               temp2 = -i * dt * dot_product(cassig_b(m,1:3), &
+                     &  psi_clone(nplace_pm1 + 1:nplace_pm1 + 3))
             END IF
             ! Update k vector
             k1(nplace + m) = k1(nplace + m) + (temp1 + temp2)
@@ -486,37 +483,28 @@ PROGRAM Two_Filter_Cross_Correlation
           cassig_b = -i * SQRT(0.5 * gamma * kappa_b) * SQRT(1.0 * nb) * sigmam
           ! Matrix multiplication
           DO m=1,3
-            k2(nplace + m) = -i * dt * H_full(m,1) * &
-                           & (psi_clone(nplace + 1) + 0.5 * k1(nplace + 1))&
-                           & -i * dt * H_full(m,2) * &
-                           & (psi_clone(nplace + 2) + 0.5 * k1(nplace + 2))&
-                           & -i * dt * H_full(m,3) * &
-                           & (psi_clone(nplace + 3) + 0.5 * k1(nplace + 3))
-           ! Only calculate the next part for photon number l > 0 as the
-           ! a^{\dagger} operator couples the |N-1> state to the |N> state.
+            k2(nplace + m) = -i * dt * dot_product(H_full(m,1:3), &
+                           &  psi_clone(nplace + 1:nplace + 3) + &
+                           &    0.5 * k1(nplace + 1:nplace + 3))
+            ! Only calculate the next part for photon number l > 0 as the
+            ! a^{\dagger} operator couples the |N-1> state to the |N> state.
             temp1 = 0
             IF (na /= 0) THEN
               ! cavity a
               ! photon number index for (na - 1)
               nplace_pm1 = (3 * (N + 1) * (na - 1)) + (3 * nb)
-              temp1 = -i * dt * cassig_a(m,1) * &
-                    & (psi_clone(nplace_pm1 + 1) + 0.5 * k1(nplace_pm1 + 1))&
-                    & -i * dt * cassig_a(m,2) * &
-                    & (psi_clone(nplace_pm1 + 2) + 0.5 * k1(nplace_pm1 + 2))&
-                    & -i * dt * cassig_a(m,3) * &
-                    & (psi_clone(nplace_pm1 + 3) + 0.5 * k1(nplace_pm1 + 3))
+              temp1 = -i * dt * dot_product(cassig_a(m,1:3), &
+                    &  psi_clone(nplace_pm1 + 1:nplace_pm1 + 3) + &
+                    &    0.5 * k1(nplace_pm1 + 1:nplace_pm1 + 3))
              END IF
              temp2 = 0
              IF (nb /= 0) THEN
                 ! cavity b
                 ! photon number index for (nb - 1)
                 nplace_pm1 = (3 * (N + 1) * na) + (3 * (nb - 1))
-                temp2 = -i * dt * cassig_b(m,1) * &
-                      & (psi_clone(nplace_pm1 + 1) + 0.5 * k1(nplace_pm1 + 1)) &
-                      & -i * dt * cassig_b(m,2) * &
-                      & (psi_clone(nplace_pm1 + 2) + 0.5 * k1(nplace_pm1 + 2)) &
-                      & -i * dt * cassig_b(m,3) * &
-                      & (psi_clone(nplace_pm1 + 3) + 0.5 * k1(nplace_pm1 + 3))
+                temp2 = -i * dt * dot_product(cassig_b(m,1:3), &
+                      &  psi_clone(nplace_pm1 + 1:nplace_pm1 + 3) + &
+                      &    0.5 * k1(nplace_pm1 + 1:nplace_pm1 + 3))
               END IF
             ! Update k vector
             k2(nplace + m) = k2(nplace + m) + (temp1 + temp2)
@@ -548,12 +536,9 @@ PROGRAM Two_Filter_Cross_Correlation
           cassig_b = -i * SQRT(0.5 * gamma * kappa_b) * SQRT(1.0 * nb) * sigmam
           ! Matrix multiplication
           DO m=1,3
-            k3(nplace + m) = -i * dt * H_full(m,1) * &
-                           & (psi_clone(nplace + 1) + 0.5 * k2(nplace + 1))&
-                           & -i * dt * H_full(m,2) * &
-                           & (psi_clone(nplace + 2) + 0.5 * k2(nplace + 2))&
-                           & -i * dt * H_full(m,3) * &
-                           & (psi_clone(nplace + 3) + 0.5 * k2(nplace + 3))
+            k3(nplace + m) = -i * dt * dot_product(H_full(m,1:3), &
+                           &  psi_clone(nplace + 1:nplace + 3) + &
+                           &    0.5 * k2(nplace + 1:nplace + 3))
            ! Only calculate the next part for photon number l > 0 as the
            ! a^{\dagger} operator couples the |N-1> state to the |N> state.
             temp1 = 0
@@ -561,24 +546,18 @@ PROGRAM Two_Filter_Cross_Correlation
               ! cavity a
               ! photon number index for (na - 1)
               nplace_pm1 = (3 * (N + 1) * (na - 1)) + (3 * nb)
-              temp1 = -i * dt * cassig_a(m,1) * &
-                    & (psi_clone(nplace_pm1 + 1) + 0.5 * k2(nplace_pm1 + 1))&
-                    & -i * dt * cassig_a(m,2) * &
-                    & (psi_clone(nplace_pm1 + 2) + 0.5 * k2(nplace_pm1 + 2))&
-                    & -i * dt * cassig_a(m,3) * &
-                    & (psi_clone(nplace_pm1 + 3) + 0.5 * k2(nplace_pm1 + 3))
+              temp1 = -i * dt * dot_product(cassig_a(m,1:3), &
+                    & psi_clone(nplace_pm1 + 1:nplace_pm1 + 3) + &
+                    &   0.5 * k2(nplace_pm1 + 1:nplace_pm1 + 3))
             END IF
             temp2 = 0
             IF (nb /= 0) THEN
                ! cavity b
                ! photon number index for (nb - 1)
                nplace_pm1 = (3 * (N + 1) * na) + (3 * (nb - 1))
-               temp2 = -i * dt * cassig_b(m,1) * &
-                     & (psi_clone(nplace_pm1 + 1) + 0.5 * k2(nplace_pm1 + 1)) &
-                     & -i * dt * cassig_b(m,2) * &
-                     & (psi_clone(nplace_pm1 + 2) + 0.5 * k2(nplace_pm1 + 2)) &
-                     & -i * dt * cassig_b(m,3) * &
-                     & (psi_clone(nplace_pm1 + 3) + 0.5 * k2(nplace_pm1 + 3))
+               temp2 = -i * dt * dot_product(cassig_b(m,1:3), &
+                     & psi_clone(nplace_pm1 + 1:nplace_pm1 + 3) + &
+                     &   0.5 * k2(nplace_pm1 + 1:nplace_pm1 + 3))
              END IF
             ! Update k vector
             k3(nplace + m) = k3(nplace + m) + (temp1 + temp2)
@@ -610,12 +589,9 @@ PROGRAM Two_Filter_Cross_Correlation
           cassig_b = -i * SQRT(0.5 * gamma * kappa_b) * SQRT(1.0 * nb) * sigmam
           ! Matrix multiplication
           DO m=1,3
-            k4(nplace + m) = -i * dt * H_full(m,1) * &
-                           & (psi_clone(nplace + 1) + k3(nplace + 1))&
-                           & -i * dt * H_full(m,2) * &
-                           & (psi_clone(nplace + 2) + k3(nplace + 2))&
-                           & -i * dt * H_full(m,3) * &
-                           & (psi_clone(nplace + 3) + k3(nplace + 3))
+            k4(nplace + m) = -i * dt * dot_product(H_full(m,1:3), &
+                           & psi_clone(nplace + 1:nplace + 3) + &
+                               k3(nplace + 1:nplace + 3))
            ! Only calculate the next part for photon number l > 0 as the
            ! a^{\dagger} operator couples the |N-1> state to the |N> state.
             temp1 = 0
@@ -623,24 +599,18 @@ PROGRAM Two_Filter_Cross_Correlation
               ! cavity a
               ! photon number index for (na - 1)
               nplace_pm1 = (3 * (N + 1) * (na - 1)) + (3 * nb)
-              temp1 = -i * dt * cassig_a(m,1) * &
-                    & (psi_clone(nplace_pm1 + 1) + k3(nplace_pm1 + 1))&
-                    & -i * dt * cassig_a(m,2) * &
-                    & (psi_clone(nplace_pm1 + 2) + k3(nplace_pm1 + 2))&
-                    & -i * dt * cassig_a(m,3) * &
-                    & (psi_clone(nplace_pm1 + 3) + k3(nplace_pm1 + 3))
+              temp1 = -i * dt * dot_product(cassig_a(m,1:3), &
+                    & psi_clone(nplace_pm1 + 1:nplace_pm1 + 3) + &
+                    & k3(nplace_pm1 + 1:nplace_pm1 + 3))
             END IF
             temp2 = 0
             IF (nb /= 0) THEN
                ! cavity b
                ! photon number index for (nb - 1)
                nplace_pm1 = (3 * (N + 1) * na) + (3 * (nb - 1))
-               temp2 = -i * dt * cassig_b(m,1) * &
-                     & (psi_clone(nplace_pm1 + 1) + k3(nplace_pm1 + 1)) &
-                     & -i * dt * cassig_b(m,2) * &
-                     & (psi_clone(nplace_pm1 + 2) + k3(nplace_pm1 + 2)) &
-                     & -i * dt * cassig_b(m,3) * &
-                     & (psi_clone(nplace_pm1 + 3) + k3(nplace_pm1 + 3))
+               temp2 = -i * dt * dot_product(cassig_b(m,1:3), &
+                     & psi_clone(nplace_pm1 + 1:nplace_pm1 + 3) + &
+                     &   k3(nplace_pm1 + 1:nplace_pm1 + 3))
              END IF
             ! Update k vector
             k4(nplace + m) = k4(nplace + m) + (temp1 + temp2)
